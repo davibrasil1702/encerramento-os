@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Encerramento de OS · Manutenção</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --bg:#f3f5f8; --card:#fff; --ink:#1d2433; --muted:#667085; --line:#dfe3ea;
+    --brand:#1f4e8c; --brand-2:#163a69; --ok:#1b7f4b; --warn:#b26a00; --bad:#b42318;
+    --radius:12px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:15px}
+  header{background:var(--brand);color:#fff;padding:18px 20px}
+  header h1{margin:0;font-size:20px}
+  header p{margin:4px 0 0;opacity:.85;font-size:13px}
+  .modo{display:inline-block;margin-top:8px;font-size:12px;padding:3px 8px;border-radius:99px;background:rgba(255,255,255,.18)}
+  nav{display:flex;gap:4px;padding:0 20px;background:var(--brand-2)}
+  nav button{background:none;border:0;color:#cfd9ea;padding:12px 14px;font-size:14px;cursor:pointer;border-bottom:3px solid transparent}
+  nav button.ativo{color:#fff;border-bottom-color:#fff;font-weight:600}
+  main{max-width:1100px;margin:0 auto;padding:20px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+  .form-wrap{max-width:680px;margin:0 auto}
+  fieldset{border:0;margin:0;padding:0;min-width:0}
+  fieldset.secao{border-top:1px solid var(--line);margin-top:8px;padding-top:12px}
+  legend.titulo-secao{font-weight:700;color:var(--brand);font-size:15px;padding:0;margin-bottom:6px}
+  .campo{margin:14px 0}
+  .campo > label, .campo > .rotulo{display:block;font-weight:600;margin-bottom:6px}
+  .obrig{color:var(--bad)}
+  .dica{font-size:12.5px;color:var(--muted);margin:-2px 0 6px}
+  input[type=text],input[type=datetime-local],input[type=date],select,textarea{
+    width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff}
+  textarea{min-height:80px;resize:vertical}
+  input:focus,select:focus,textarea:focus{outline:2px solid #9db8e0;border-color:var(--brand)}
+  .opcoes label{display:flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;cursor:pointer;font-weight:400}
+  .opcoes label:has(input:checked){border-color:var(--brand);background:#eef3fb}
+  .btn{display:inline-flex;align-items:center;gap:6px;border:0;border-radius:8px;padding:10px 16px;font:inherit;font-weight:600;cursor:pointer;background:var(--brand);color:#fff}
+  .btn:hover{background:var(--brand-2)}
+  .btn.sec{background:#e8edf5;color:var(--brand)}
+  .btn.sec:hover{background:#dbe4f1}
+  .btn.perigo{background:#fdecea;color:var(--bad)}
+  .btn:disabled{opacity:.6;cursor:wait}
+  .acoes{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+  .erro{background:#fdecea;color:var(--bad);border-radius:8px;padding:10px 12px;margin-top:12px}
+  .sucesso{text-align:center}
+  .sucesso h2{color:var(--ok);margin-top:0}
+  .filtros{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:10px;align-items:end}
+  .filtros label{font-size:12.5px;color:var(--muted);display:block;margin-bottom:4px}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px}
+  .kpi b{display:block;font-size:22px}
+  .kpi span{font-size:12.5px;color:var(--muted)}
+  .tabela-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px;background:#fff}
+  table{border-collapse:collapse;width:100%;font-size:13.5px}
+  th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{background:#f7f9fc;position:sticky;top:0;white-space:nowrap}
+  td.det{max-width:320px}
+  .badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:600;white-space:nowrap}
+  .b-Concluída{background:#e6f4ec;color:var(--ok)}
+  .b-Aguardando{background:#fff4e0;color:var(--warn)}
+  .b-Cancelada{background:#fdecea;color:var(--bad)}
+  .vazio{padding:30px;text-align:center;color:var(--muted)}
+  .aviso{background:#fff4e0;color:#7a4a00;border:1px solid #f3d29a;border-radius:10px;padding:10px 14px;margin-bottom:14px}
+  .grade-add{display:grid;grid-template-columns:1fr 2fr 1fr auto;gap:8px;align-items:end}
+  .grade-add label{font-size:12.5px;color:var(--muted);display:block;margin-bottom:4px}
+  .card h3{margin:0 0 6px;color:var(--brand);font-size:16px}
+  .btn.mini{padding:5px 10px;font-size:12.5px}
+  input[type=password]{width:100%;max-width:220px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font:inherit}
+  input[type=file]{display:none}
+  [hidden]{display:none !important}
+  @media (max-width:760px){.grade-add{grid-template-columns:1fr}.filtros{grid-template-columns:1fr 1fr}.kpis{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Encerramento de OS · Manutenção</h1>
+  <p>Uso dos técnicos da Infra. Escolha a OS na lista: as urgentes aparecem primeiro.</p>
+  <span class="modo" id="modo"></span>
+</header>
+<nav>
+  <button class="ativo" data-aba="form">Encerrar OS</button>
+  <button data-aba="consulta">Consultar respostas</button>
+  <button data-aba="admin">Administração</button>
+</nav>
+
+<main>
+  <!-- ===================== FORMULÁRIO ===================== -->
+  <section id="aba-form" class="form-wrap">
+    <form id="form" class="card" novalidate>
+      <p class="dica"><span class="obrig">*</span> Indica uma pergunta obrigatória</p>
+
+      <div class="campo">
+        <label for="os">OS <span class="obrig">*</span></label>
+        <select id="os" name="os" required><option value="">Carregando...</option></select>
+      </div>
+
+      <div class="campo">
+        <span class="rotulo">Resultado <span class="obrig">*</span></span>
+        <div class="opcoes">
+          <label><input type="radio" name="resultado" value="Concluída" required> Concluída</label>
+          <label><input type="radio" name="resultado" value="Aguardando peça"> Aguardando peça</label>
+          <label><input type="radio" name="resultado" value="Cancelada"> Cancelada</label>
+        </div>
+      </div>
+
+      <!-- Concluída -->
+      <fieldset class="secao" id="sec-concluida" hidden disabled>
+        <legend class="titulo-secao">Concluída</legend>
+        <div class="campo">
+          <label for="inicio">Início do atendimento</label>
+          <p class="dica">Deixe em branco se já informou ao marcar "Aguardando peça".</p>
+          <input type="datetime-local" id="inicio" name="inicio">
+        </div>
+        <div class="campo">
+          <span class="rotulo">Liberado para a operação agora? <span class="obrig">*</span></span>
+          <div class="opcoes">
+            <label><input type="radio" name="liberadoAgora" value="Sim" required> Sim, liberado agora</label>
+            <label><input type="radio" name="liberadoAgora" value="Não"> Não, foi liberado antes</label>
+          </div>
+        </div>
+        <fieldset id="sec-liberacao" hidden disabled>
+          <div class="campo">
+            <label for="liberacao">Liberado para a operação em <span class="obrig">*</span></label>
+            <input type="datetime-local" id="liberacao" name="liberacao" required>
+          </div>
+        </fieldset>
+
+        <fieldset class="secao">
+          <legend class="titulo-secao">O que foi feito</legend>
+          <div class="campo">
+            <label for="tipoFalha">Tipo de falha <span class="obrig">*</span></label>
+            <select id="tipoFalha" name="tipoFalha" required></select>
+          </div>
+          <div class="campo">
+            <label for="servico">Serviço executado <span class="obrig">*</span></label>
+            <textarea id="servico" name="servico" required></textarea>
+          </div>
+          <div class="campo">
+            <label for="fornecedor">Fornecedor (se houve atendimento externo)</label>
+            <input type="text" id="fornecedor" name="fornecedor">
+          </div>
+        </fieldset>
+      </fieldset>
+
+      <!-- Aguardando peça -->
+      <fieldset class="secao" id="sec-aguardando" hidden disabled>
+        <legend class="titulo-secao">Aguardando peça</legend>
+        <div class="campo">
+          <label for="aguardandoInicio">Atendimento começou em <span class="obrig">*</span></label>
+          <input type="datetime-local" id="aguardandoInicio" name="aguardandoInicio" required>
+        </div>
+        <div class="campo">
+          <label for="faltando">O que está faltando? <span class="obrig">*</span></label>
+          <textarea id="faltando" name="faltando" required></textarea>
+        </div>
+      </fieldset>
+
+      <!-- Cancelada -->
+      <fieldset class="secao" id="sec-cancelada" hidden disabled>
+        <legend class="titulo-secao">Cancelada</legend>
+        <div class="campo">
+          <label for="motivo">Motivo do cancelamento <span class="obrig">*</span></label>
+          <textarea id="motivo" name="motivo" required></textarea>
+        </div>
+      </fieldset>
+
+      <fieldset class="secao" id="sec-tecnico" hidden disabled>
+        <div class="campo">
+          <label for="tecnico">Técnico <span class="obrig">*</span></label>
+          <select id="tecnico" name="tecnico" required></select>
+        </div>
+        <fieldset id="sec-outro" hidden disabled>
+          <div class="campo">
+            <label for="tecnicoOutro">Nome do técnico <span class="obrig">*</span></label>
+            <input type="text" id="tecnicoOutro" name="tecnicoOutro" required>
+          </div>
+        </fieldset>
+      </fieldset>
+
+      <div id="erro" class="erro" hidden></div>
+      <div class="acoes">
+        <button type="submit" class="btn" id="btn-enviar">Enviar</button>
+        <button type="reset" class="btn sec">Limpar formulário</button>
+      </div>
+    </form>
+
+    <div id="sucesso" class="card sucesso" hidden>
+      <h2>Resposta registrada ✓</h2>
+      <p id="sucesso-txt"></p>
+      <div class="acoes" style="justify-content:center">
+        <button class="btn sec" id="btn-comprovante">Baixar comprovante (.xlsx)</button>
+        <button class="btn" id="btn-nova">Encerrar outra OS</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CONSULTA ===================== -->
+  <section id="aba-consulta" hidden>
+    <div class="aviso" id="aviso-backup-c" hidden></div>
+    <div class="card">
+      <div class="filtros">
+        <div><label for="f-busca">Buscar (OS, serviço, motivo, fornecedor...)</label><input type="text" id="f-busca"></div>
+        <div><label for="f-resultado">Resultado</label><select id="f-resultado"><option value="">Todos</option><option>Concluída</option><option>Aguardando peça</option><option>Cancelada</option></select></div>
+        <div><label for="f-tecnico">Técnico</label><select id="f-tecnico"><option value="">Todos</option></select></div>
+        <div><label for="f-de">Enviado de</label><input type="date" id="f-de"></div>
+        <div><label for="f-ate">Até</label><input type="date" id="f-ate"></div>
+      </div>
+      <div class="acoes">
+        <button class="btn" id="btn-excel">Exportar Excel (filtro atual)</button>
+        <button class="btn sec" id="btn-atualizar">Atualizar</button>
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><b id="k-total">0</b><span>Respostas</span></div>
+      <div class="kpi"><b id="k-concl">0</b><span>Concluídas</span></div>
+      <div class="kpi"><b id="k-aguard">0</b><span>Aguardando peça</span></div>
+      <div class="kpi"><b id="k-tempo">–</b><span>Tempo médio até liberação (h)</span></div>
+    </div>
+
+    <div class="tabela-wrap">
+      <table>
+        <thead><tr>
+          <th>Enviado em</th><th>OS</th><th>Resultado</th><th>Técnico</th><th>Início</th>
+          <th>Liberação</th><th>Tipo falha</th><th>Detalhe</th><th>Fornecedor</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div id="vazio" class="vazio" hidden>Nenhuma resposta encontrada.</div>
+    </div>
+  </section>
+
+  <!-- ===================== ADMINISTRAÇÃO ===================== -->
+  <section id="aba-admin" hidden>
+    <div class="card" id="admin-login">
+      <h3>Área restrita</h3>
+      <p class="dica">Digite o PIN de administração para gerenciar OS e backups.</p>
+      <div class="acoes" style="margin-top:8px">
+        <input type="password" id="pin" inputmode="numeric" placeholder="PIN">
+        <button class="btn" id="btn-pin">Entrar</button>
+      </div>
+      <div id="pin-erro" class="erro" hidden>PIN incorreto.</div>
+    </div>
+
+    <div id="admin-conteudo" hidden>
+      <div class="aviso" id="aviso-backup-a" hidden></div>
+
+      <div class="card">
+        <h3>OS em aberto</h3>
+        <p class="dica">Importe um Excel ou CSV com as colunas <b>OS</b>, <b>Descrição</b> e <b>Prioridade</b> (Urgente/Normal). A importação substitui a lista atual. OS concluídas ou canceladas somem do formulário automaticamente.</p>
+        <div class="acoes" style="margin-top:8px">
+          <label class="btn" for="arq-os">Importar lista de OS (.xlsx / .csv)</label>
+          <input type="file" id="arq-os" accept=".xlsx,.xls,.csv">
+          <button class="btn sec" id="btn-modelo-os">Baixar modelo</button>
+        </div>
+        <div class="grade-add" style="margin-top:16px">
+          <div><label for="n-os">Nº da OS</label><input type="text" id="n-os"></div>
+          <div><label for="n-desc">Descrição</label><input type="text" id="n-desc"></div>
+          <div><label for="n-prio">Prioridade</label><select id="n-prio"><option>Normal</option><option>Urgente</option></select></div>
+          <button class="btn" id="btn-add-os">Adicionar</button>
+        </div>
+        <div class="tabela-wrap" style="margin-top:14px">
+          <table><thead><tr><th>OS</th><th>Descrição</th><th>Prioridade</th><th>Situação</th><th></th></tr></thead>
+          <tbody id="tbody-os"></tbody></table>
+          <div id="vazio-os" class="vazio" hidden>Nenhuma OS cadastrada.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Backup</h3>
+        <p class="dica">As respostas ficam salvas só neste navegador. Faça backup com frequência e guarde o arquivo na rede ou no OneDrive.</p>
+        <p id="info-backup" style="margin:8px 0 0"></p>
+        <div class="acoes">
+          <button class="btn" id="btn-backup">Baixar backup (.json)</button>
+          <label class="btn sec" for="arq-backup">Restaurar backup</label>
+          <input type="file" id="arq-backup" accept=".json">
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="color:var(--bad)">Zona de perigo</h3>
+        <p class="dica">Apaga todas as respostas deste navegador. Baixe um backup antes.</p>
+        <div class="acoes"><button class="btn perigo" id="btn-apagar">Apagar todas as respostas</button></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+/* =====================================================================
+   CONFIGURAÇÃO — ajuste aqui
+   ===================================================================== */
+const CONFIG = {
+  TECNICOS: ['Davi'],
+  TIPOS_FALHA: 'ABCDEFGHIJKLMNOPQRST'.split(''),
+  PIN_ADMIN: '1234',          // TROQUE antes de publicar (protege só contra cliques acidentais)
+  DIAS_ALERTA_BACKUP: 7       // avisa se o último backup tiver mais de X dias
+};
+
+/* =====================================================================
+   ARMAZENAMENTO LOCAL (navegador deste aparelho)
+   ===================================================================== */
+const CHAVES = { resp: 'encerramento_os_respostas_v1', os: 'encerramento_os_lista_v1', backup: 'encerramento_os_ultimo_backup' };
+
+const Store = {
+  memoria: {},
+  ler(chave, padrao) {
+    try { const v = localStorage.getItem(chave); return v ? JSON.parse(v) : padrao; }
+    catch { return this.memoria[chave] ?? padrao; }
+  },
+  gravar(chave, valor) {
+    try { localStorage.setItem(chave, JSON.stringify(valor)); }
+    catch { this.memoria[chave] = valor; }
+  },
+  respostas() { return this.ler(CHAVES.resp, []); },
+  salvarRespostas(l) { this.gravar(CHAVES.resp, l); },
+  adicionarResposta(reg) { const l = this.respostas(); l.push(reg); this.salvarRespostas(l); },
+  osCadastradas() { return this.ler(CHAVES.os, []); },
+  salvarOS(l) { this.gravar(CHAVES.os, l); },
+  fechadas() { return new Set(this.respostas().filter(x => x.resultado !== 'Aguardando peça').map(x => x.os)); },
+  aguardando() { return new Set(this.respostas().filter(x => x.resultado === 'Aguardando peça').map(x => x.os)); },
+  osAbertas() { const f = this.fechadas(); return this.osCadastradas().filter(o => !f.has(o.os)); },
+  ultimoBackup() { return this.ler(CHAVES.backup, null); },
+  marcarBackup() { this.gravar(CHAVES.backup, new Date().toISOString()); }
+};
+
+// Pede ao navegador para não apagar os dados automaticamente quando faltar espaço
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+
+/* =====================================================================
+   UTILITÁRIOS
+   ===================================================================== */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad = n => String(n).padStart(2, '0');
+const agoraLocal = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+const paraData = s => s ? new Date(s) : null;
+const fmt = s => { const d = paraData(s); return d && !isNaN(d) ? `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}` : ''; };
+// Data local -> número serial do Excel (evita o desvio de fuso do SheetJS)
+const serialExcel = s => { const d = paraData(s); return d && !isNaN(d) ? (Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(), d.getMinutes()) - Date.UTC(1899, 11, 30)) / 864e5 : null; };
+const horasEntre = (a, b) => { const x = paraData(a), y = paraData(b); return x && y && !isNaN(x) && !isNaN(y) ? Math.round((y - x) / 36e5 * 100) / 100 : null; };
+
+/* =====================================================================
+   FORMULÁRIO
+   ===================================================================== */
+const form = $('#form');
+let ultimoRegistro = null;
+
+function preencherSelects() {
+  $('#tipoFalha').innerHTML = '<option value="">Selecione...</option>' + CONFIG.TIPOS_FALHA.map(t => `<option>${esc(t)}</option>`).join('');
+  $('#tecnico').innerHTML = '<option value="">Selecione...</option>' + CONFIG.TECNICOS.map(t => `<option>${esc(t)}</option>`).join('') + '<option value="__outro">Outro (não está na lista)</option>';
+}
+
+function carregarOS() {
+  const sel = $('#os');
+  const ag = Store.aguardando();
+  const lista = Store.osAbertas().slice()
+    .sort((a, b) => (a.prioridade === 'Urgente' ? 0 : 1) - (b.prioridade === 'Urgente' ? 0 : 1) || String(a.os).localeCompare(String(b.os)));
+  sel.innerHTML = lista.length
+    ? '<option value="">Selecione a OS...</option>' + lista.map(o =>
+        `<option value="${esc(o.os)}">${o.prioridade === 'Urgente' ? '🔴 ' : ''}${esc(o.os)} · ${esc(o.descricao)}${ag.has(o.os) ? ' (aguardando peça)' : ''}</option>`).join('')
+    : '<option value="">(nenhuma OS em aberto)</option>';
+}
+
+function mostrar(id, visivel) { const el = $(id); el.hidden = !visivel; el.disabled = !visivel; }
+
+function atualizarSecoes() {
+  const res = form.resultado.value;
+  const lib = form.liberadoAgora.value;
+  mostrar('#sec-concluida', res === 'Concluída');
+  mostrar('#sec-liberacao', res === 'Concluída' && lib === 'Não');
+  mostrar('#sec-aguardando', res === 'Aguardando peça');
+  mostrar('#sec-cancelada', res === 'Cancelada');
+  mostrar('#sec-tecnico', !!res);
+  mostrar('#sec-outro', !!res && $('#tecnico').value === '__outro');
+}
+
+function mostrarErro(msg) { const e = $('#erro'); e.textContent = msg; e.hidden = !msg; }
+
+function validar() {
+  if (!form.checkValidity()) {
+    const inv = form.querySelector('input:invalid, select:invalid, textarea:invalid');
+    const rot = inv.closest('.campo')?.querySelector('label, .rotulo')?.textContent.replace('*', '').trim();
+    inv.focus();
+    return `Preencha o campo obrigatório: ${rot || inv.name}.`;
+  }
+  const ini = form.inicio.value, lib = form.liberacao.value;
+  if (form.resultado.value === 'Concluída' && !form.liberacao.matches(':disabled') && ini && lib && new Date(lib) < new Date(ini))
+    return 'A liberação não pode ser anterior ao início do atendimento.';
+  return '';
+}
+
+// Se o início ficou em branco ao concluir, usa o início informado no último "Aguardando peça" da mesma OS
+function inicioAnterior(os) {
+  const ant = Store.respostas().filter(r => r.os === os && r.resultado === 'Aguardando peça' && r.inicio)
+    .sort((a, b) => String(b.enviadoEm).localeCompare(String(a.enviadoEm)))[0];
+  return ant ? ant.inicio : '';
+}
+
+function montarRegistro() {
+  // :disabled considera também o fieldset pai desabilitado (seções ocultas)
+  const v = n => (form[n] && !form[n].matches(':disabled') ? (form[n].value || '').trim() : '');
+  const res = form.resultado.value;
+  const libAgora = res === 'Concluída' ? form.liberadoAgora.value : '';
+  const agora = agoraLocal();
+  return {
+    id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
+    enviadoEm: agora,
+    os: form.os.value,
+    resultado: res,
+    inicio: res === 'Concluída' ? (v('inicio') || inicioAnterior(form.os.value)) : v('aguardandoInicio'),
+    liberadoAgora: libAgora,
+    liberacao: libAgora === 'Sim' ? agora : v('liberacao'),
+    tipoFalha: v('tipoFalha'),
+    servico: v('servico'),
+    fornecedor: v('fornecedor'),
+    faltando: v('faltando'),
+    motivo: v('motivo'),
+    tecnico: form.tecnico.value === '__outro' ? v('tecnicoOutro') : form.tecnico.value
+  };
+}
+
+form.addEventListener('change', atualizarSecoes);
+form.addEventListener('reset', () => setTimeout(() => { atualizarSecoes(); mostrarErro(''); }));
+
+form.addEventListener('submit', async ev => {
+  ev.preventDefault();
+  const erro = validar();
+  mostrarErro(erro);
+  if (erro) return;
+  const btn = $('#btn-enviar');
+  btn.disabled = true; btn.textContent = 'Enviando...';
+  try {
+    const reg = montarRegistro();
+    Store.adicionarResposta(reg);
+    ultimoRegistro = reg;
+    form.hidden = true;
+    $('#sucesso').hidden = false;
+    $('#sucesso-txt').textContent = `${reg.os} · ${reg.resultado} · ${reg.tecnico} · ${fmt(reg.enviadoEm)}`;
+  } catch (e) {
+    mostrarErro('Erro ao enviar: ' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Enviar';
+  }
+});
+
+$('#btn-nova').onclick = () => {
+  form.reset(); form.hidden = false; $('#sucesso').hidden = true;
+  carregarOS();
+};
+$('#btn-comprovante').onclick = () => ultimoRegistro && exportarExcel([ultimoRegistro], `comprovante_${ultimoRegistro.os}.xlsx`, false);
+
+/* =====================================================================
+   CONSULTA
+   ===================================================================== */
+let todas = [];
+
+function filtradas() {
+  const busca = $('#f-busca').value.trim().toLowerCase();
+  const res = $('#f-resultado').value, tec = $('#f-tecnico').value;
+  const de = $('#f-de').value, ate = $('#f-ate').value;
+  return todas.filter(r => {
+    const dia = String(r.enviadoEm).slice(0, 10);
+    if (res && r.resultado !== res) return false;
+    if (tec && r.tecnico !== tec) return false;
+    if (de && dia < de) return false;
+    if (ate && dia > ate) return false;
+    if (busca && ![r.os, r.servico, r.motivo, r.faltando, r.fornecedor, r.tipoFalha, r.tecnico].join(' ').toLowerCase().includes(busca)) return false;
+    return true;
+  }).sort((a, b) => String(b.enviadoEm).localeCompare(String(a.enviadoEm)));
+}
+
+function renderTabela() {
+  const lista = filtradas();
+  $('#tbody').innerHTML = lista.map(r => {
+    const cls = r.resultado === 'Aguardando peça' ? 'Aguardando' : r.resultado;
+    const det = r.servico || r.faltando || r.motivo || '';
+    return `<tr>
+      <td>${fmt(r.enviadoEm)}</td><td><b>${esc(r.os)}</b></td>
+      <td><span class="badge b-${esc(cls)}">${esc(r.resultado)}</span></td>
+      <td>${esc(r.tecnico)}</td><td>${fmt(r.inicio)}</td><td>${fmt(r.liberacao)}</td>
+      <td>${esc(r.tipoFalha)}</td><td class="det">${esc(det)}</td><td>${esc(r.fornecedor)}</td></tr>`;
+  }).join('');
+  $('#vazio').hidden = lista.length > 0;
+  $('#k-total').textContent = lista.length;
+  $('#k-concl').textContent = lista.filter(r => r.resultado === 'Concluída').length;
+  $('#k-aguard').textContent = lista.filter(r => r.resultado === 'Aguardando peça').length;
+  const tempos = lista.map(r => r.resultado === 'Concluída' ? horasEntre(r.inicio, r.liberacao) : null).filter(t => t !== null);
+  $('#k-tempo').textContent = tempos.length ? (tempos.reduce((a, b) => a + b, 0) / tempos.length).toFixed(1) : '–';
+}
+
+function carregarConsulta() {
+  atualizarAvisoBackup();
+  try {
+    todas = Store.respostas();
+    const tecs = [...new Set(todas.map(r => r.tecnico).filter(Boolean))].sort();
+    const atual = $('#f-tecnico').value;
+    $('#f-tecnico').innerHTML = '<option value="">Todos</option>' + tecs.map(t => `<option ${t === atual ? 'selected' : ''}>${esc(t)}</option>`).join('');
+    $('#vazio').textContent = 'Nenhuma resposta encontrada.';
+    renderTabela();
+  } catch (e) {
+    $('#vazio').textContent = 'Erro ao carregar: ' + e.message;
+  }
+}
+
+['#f-busca', '#f-resultado', '#f-tecnico', '#f-de', '#f-ate'].forEach(s => $(s).addEventListener('input', renderTabela));
+$('#btn-atualizar').onclick = carregarConsulta;
+$('#btn-excel').onclick = () => exportarExcel(filtradas(), `encerramento_os_${agoraLocal().slice(0, 10)}.xlsx`, true);
+
+/* =====================================================================
+   EXPORTAÇÃO EXCEL (SheetJS)
+   ===================================================================== */
+function exportarExcel(lista, nomeArquivo, comResumo) {
+  if (typeof XLSX === 'undefined') { alert('Biblioteca de Excel não carregou (verifique a internet).'); return; }
+  if (!lista.length) { alert('Não há respostas para exportar.'); return; }
+  const linhas = lista.map(r => ({
+    'Enviado em': serialExcel(r.enviadoEm),
+    'OS': r.os,
+    'Resultado': r.resultado,
+    'Técnico': r.tecnico,
+    'Início do atendimento': serialExcel(r.inicio),
+    'Liberado agora?': r.liberadoAgora,
+    'Liberação p/ operação': serialExcel(r.liberacao),
+    'Tempo até liberação (h)': r.resultado === 'Concluída' ? horasEntre(r.inicio, r.liberacao) : null,
+    'Tipo de falha': r.tipoFalha,
+    'Serviço executado': r.servico,
+    'Fornecedor': r.fornecedor,
+    'O que está faltando': r.faltando,
+    'Motivo do cancelamento': r.motivo
+  }));
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet(linhas);
+  // Formata colunas de data (A, E, G)
+  for (let i = 2; i <= lista.length + 1; i++) ['A', 'E', 'G'].forEach(c => { if (ws[c + i]) ws[c + i].z = 'dd/mm/yyyy hh:mm'; });
+  ws['!cols'] = [18, 12, 16, 16, 20, 14, 20, 12, 12, 40, 20, 30, 30].map(w => ({ wch: w }));
+  ws['!autofilter'] = { ref: ws['!ref'] };
+  XLSX.utils.book_append_sheet(wb, ws, 'Respostas');
+
+  if (comResumo) {
+    const contar = campo => Object.entries(lista.reduce((acc, r) => { const k = r[campo] || '(vazio)'; acc[k] = (acc[k] || 0) + 1; return acc; }, {}));
+    const aoa = [['Resumo gerado em', fmt(agoraLocal())], ['Total de respostas', lista.length], [],
+      ['Por resultado', 'Qtd'], ...contar('resultado'), [],
+      ['Por técnico', 'Qtd'], ...contar('tecnico'), [],
+      ['Por tipo de falha (concluídas)', 'Qtd'], ...Object.entries(lista.filter(r => r.resultado === 'Concluída')
+        .reduce((a, r) => { a[r.tipoFalha] = (a[r.tipoFalha] || 0) + 1; return a; }, {}))];
+    const ws2 = XLSX.utils.aoa_to_sheet(aoa);
+    ws2['!cols'] = [{ wch: 30 }, { wch: 12 }];
+    XLSX.utils.book_append_sheet(wb, ws2, 'Resumo');
+  }
+  XLSX.writeFile(wb, nomeArquivo);
+}
+
+/* =====================================================================
+   ADMINISTRAÇÃO
+   ===================================================================== */
+let adminLiberado = false;
+const norm = s => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+const prioridadeDe = v => /urg|alta|critic/.test(norm(v)) ? 'Urgente' : 'Normal';
+
+$('#btn-pin').onclick = () => {
+  const ok = $('#pin').value === CONFIG.PIN_ADMIN;
+  $('#pin-erro').hidden = ok;
+  if (!ok) return;
+  adminLiberado = true; $('#pin').value = '';
+  $('#admin-login').hidden = true; $('#admin-conteudo').hidden = false;
+  renderAdmin();
+};
+$('#pin').addEventListener('keydown', e => { if (e.key === 'Enter') $('#btn-pin').click(); });
+
+function renderAdmin() {
+  atualizarAvisoBackup();
+  const fech = Store.fechadas(), ag = Store.aguardando();
+  const lista = Store.osCadastradas();
+  $('#tbody-os').innerHTML = lista.map((o, i) => {
+    const sit = fech.has(o.os) ? 'Encerrada' : ag.has(o.os) ? 'Aguardando peça' : 'Aberta';
+    return `<tr><td><b>${esc(o.os)}</b></td><td>${esc(o.descricao)}</td><td>${o.prioridade === 'Urgente' ? '🔴 Urgente' : 'Normal'}</td>
+      <td>${sit}</td><td><button class="btn perigo mini" data-rem="${i}">Remover</button></td></tr>`;
+  }).join('');
+  $('#vazio-os').hidden = lista.length > 0;
+  const ub = Store.ultimoBackup();
+  $('#info-backup').textContent = `Respostas salvas: ${Store.respostas().length} · Último backup: ${ub ? fmt(ub) : 'nunca'}`;
+}
+
+$('#tbody-os').addEventListener('click', e => {
+  const i = e.target.dataset.rem; if (i == null) return;
+  const l = Store.osCadastradas();
+  if (!confirm(`Remover a ${l[i].os} da lista?`)) return;
+  l.splice(Number(i), 1); Store.salvarOS(l); renderAdmin(); carregarOS();
+});
+
+$('#btn-add-os').onclick = () => {
+  const os = $('#n-os').value.trim(), descricao = $('#n-desc').value.trim(), prioridade = $('#n-prio').value;
+  if (!os) { alert('Informe o número da OS.'); return; }
+  const l = Store.osCadastradas();
+  if (l.some(o => o.os === os)) { alert('Essa OS já está na lista.'); return; }
+  l.push({ os, descricao, prioridade }); Store.salvarOS(l);
+  $('#n-os').value = ''; $('#n-desc').value = ''; $('#n-prio').value = 'Normal';
+  renderAdmin(); carregarOS();
+};
+
+$('#arq-os').onchange = async e => {
+  const arq = e.target.files[0]; e.target.value = '';
+  if (!arq) return;
+  if (typeof XLSX === 'undefined') { alert('Biblioteca de Excel não carregou (verifique a internet).'); return; }
+  try {
+    const buf = await arq.arrayBuffer();
+    let wb;
+    if (/\.csv$/i.test(arq.name)) {
+      // CSV: tenta UTF-8; se vier com caracteres quebrados, usa Windows-1252 (padrão do Excel em PT-BR)
+      let txt = new TextDecoder('utf-8').decode(buf);
+      if (txt.includes('\uFFFD')) txt = new TextDecoder('windows-1252').decode(buf);
+      wb = XLSX.read(txt.replace(/^\uFEFF/, ''), { type: 'string', raw: true });
+    } else {
+      wb = XLSX.read(buf, { raw: false });
+    }
+    const linhas = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '', raw: false })
+      .filter(l => l.some(c => String(c).trim() !== ''));
+    if (!linhas.length) throw new Error('arquivo vazio');
+    const cab = linhas[0].map(norm);
+    const acha = re => cab.findIndex(c => re.test(c));
+    let iOS = acha(/^(os|o\.s\.?|n.? ?os|numero|ordem)/), iDesc = acha(/desc|problema|servico/), iPrio = acha(/prior|urg/);
+    let dados = linhas.slice(1);
+    if (iOS < 0) { iOS = 0; iDesc = 1; iPrio = 2; dados = linhas; }   // sem cabeçalho reconhecível: usa colunas A, B, C
+    const vistas = new Set();
+    const lista = dados.map(l => ({
+      os: String(l[iOS] ?? '').trim(),
+      descricao: iDesc >= 0 ? String(l[iDesc] ?? '').trim() : '',
+      prioridade: prioridadeDe(iPrio >= 0 ? l[iPrio] : '')
+    })).filter(o => o.os && !vistas.has(o.os) && vistas.add(o.os));
+    if (!lista.length) throw new Error('nenhuma OS encontrada');
+    if (!confirm(`Importar ${lista.length} OS? A lista atual será substituída.`)) return;
+    Store.salvarOS(lista); renderAdmin(); carregarOS();
+    alert(`${lista.length} OS importadas.`);
+  } catch (err) { alert('Não foi possível importar: ' + err.message); }
+};
+
+$('#btn-modelo-os').onclick = () => {
+  if (typeof XLSX === 'undefined') { alert('Biblioteca de Excel não carregou.'); return; }
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([['OS', 'Descrição', 'Prioridade'], ['OS-0001', 'Exemplo: esteira travando', 'Urgente'], ['OS-0002', 'Exemplo: lâmpada queimada', 'Normal']]);
+  ws['!cols'] = [{ wch: 12 }, { wch: 40 }, { wch: 12 }];
+  XLSX.utils.book_append_sheet(wb, ws, 'OS'); XLSX.writeFile(wb, 'modelo_lista_os.xlsx');
+};
+
+$('#btn-backup').onclick = () => {
+  const dados = { app: 'encerramento-os', versao: 1, geradoEm: new Date().toISOString(), respostas: Store.respostas(), os: Store.osCadastradas() };
+  const url = URL.createObjectURL(new Blob([JSON.stringify(dados, null, 1)], { type: 'application/json' }));
+  const a = document.createElement('a'); a.href = url; a.download = `backup_encerramento_os_${agoraLocal().slice(0, 10)}.json`;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+  Store.marcarBackup(); renderAdmin();
+};
+
+$('#arq-backup').onchange = async e => {
+  const arq = e.target.files[0]; e.target.value = '';
+  if (!arq) return;
+  try {
+    const d = JSON.parse(await arq.text());
+    if (d.app !== 'encerramento-os' || !Array.isArray(d.respostas)) throw new Error('arquivo não é um backup deste site');
+    const atuais = Store.respostas(), ids = new Set(atuais.map(r => r.id));
+    const novas = d.respostas.filter(r => r && r.id && !ids.has(r.id));
+    const trocarOS = Array.isArray(d.os) && d.os.length && confirm('Também substituir a lista de OS pela do backup?');
+    if (!confirm(`Restaurar ${novas.length} resposta(s) que ainda não existem aqui?`)) return;
+    Store.salvarRespostas(atuais.concat(novas));
+    if (trocarOS) Store.salvarOS(d.os);
+    renderAdmin(); carregarOS(); alert('Backup restaurado.');
+  } catch (err) { alert('Não foi possível restaurar: ' + err.message); }
+};
+
+$('#btn-apagar').onclick = () => {
+  const n = Store.respostas().length;
+  if (!n) { alert('Não há respostas salvas.'); return; }
+  if (prompt(`Isso apaga ${n} resposta(s) deste navegador. Para confirmar, digite APAGAR:`) !== 'APAGAR') return;
+  Store.salvarRespostas([]); renderAdmin(); carregarOS();
+};
+
+function atualizarAvisoBackup() {
+  const ub = Store.ultimoBackup(), n = Store.respostas().length;
+  const dias = ub ? (Date.now() - new Date(ub)) / 864e5 : Infinity;
+  const msg = n && dias > CONFIG.DIAS_ALERTA_BACKUP
+    ? `⚠ ${ub ? `Último backup há ${Math.floor(dias)} dias` : 'Nenhum backup feito ainda'}. Peça ao administrador para baixar um backup em "Administração".` : '';
+  ['#aviso-backup-c', '#aviso-backup-a'].forEach(s => { $(s).textContent = msg; $(s).hidden = !msg; });
+}
+
+/* =====================================================================
+   ABAS E INICIALIZAÇÃO
+   ===================================================================== */
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('nav button').forEach(x => x.classList.toggle('ativo', x === b));
+  $('#aba-form').hidden = b.dataset.aba !== 'form';
+  $('#aba-consulta').hidden = b.dataset.aba !== 'consulta';
+  $('#aba-admin').hidden = b.dataset.aba !== 'admin';
+  if (b.dataset.aba === 'consulta') carregarConsulta();
+  if (b.dataset.aba === 'admin' && adminLiberado) renderAdmin();
+});
+
+$('#modo').textContent = 'Respostas salvas neste aparelho · use sempre o mesmo navegador';
+preencherSelects();
+atualizarSecoes();
+carregarOS();
+</script>
+</body>
+</html>
